@@ -8,6 +8,16 @@
 #define TEST_W_AS_FAST_U32LEN(STR) TEST(STR) .with( strf::width_as_fast_u32len{} )
 #define TEST_W_AS_U32LEN(STR) TEST(STR) .with( strf::width_as_u32len{} )
 
+template <typename CharT>
+inline STRF_HD int calc_std_width(const CharT* str)
+{
+    auto w0 = strf::width_max;
+    strf::print_width_preview prev{w0};
+    strf::preview<CharT>(prev, strf::pack(strf::std_width{}), str);
+    auto dw = w0 - prev.remaining_width();
+    return dw.floor();
+}
+
 void STRF_TEST_FUNC test_width_calculator()
 {
     using namespace strf::width_literal;
@@ -256,5 +266,92 @@ void STRF_TEST_FUNC test_width_calculator()
         TEST_W_AS_U32LEN(str_0xDFFF)        (strf::right(str_0xDFFF + 1, 4));
         TEST_W_AS_U32LEN(str_0xDFFF_0xD800) (strf::right(str_0xDFFF_0xD800 + 1, 6));
 
+    }
+
+    {   // Cover std_width
+
+        // [ U+1100, U+115F ]
+        TEST_EQ(1, calc_std_width(u8"\u10FF"));
+        TEST_EQ(2, calc_std_width(u8"\u1100"));
+        TEST_EQ(2, calc_std_width(u8"\u115F"));
+        TEST_EQ(1, calc_std_width(u8"\u1160"));
+
+        // [ U+2329, U+232A ]
+        TEST_EQ(1, calc_std_width(u8"\u2328"));
+        TEST_EQ(2, calc_std_width(u8"\u2329"));
+        TEST_EQ(2, calc_std_width(u8"\u232A"));
+        TEST_EQ(1, calc_std_width(u8"\u232B"));
+
+        // [ U+2E80, U+303E ]
+        TEST_EQ(1, calc_std_width(u8"\u2E7F"));
+        TEST_EQ(2, calc_std_width(u8"\u2E80"));
+        TEST_EQ(2, calc_std_width(u8"\u303E"));
+        TEST_EQ(1, calc_std_width(u8"\u303F"));
+
+        // [ U+3040, U+A4CF ]
+        TEST_EQ(1, calc_std_width(u8"\u303F"));
+        TEST_EQ(2, calc_std_width(u8"\u3040"));
+        TEST_EQ(2, calc_std_width(u8"\uA4CF"));
+        TEST_EQ(1, calc_std_width(u8"\uA4D0"));
+
+        // [ U+AC00, U+D7A3 ]
+        TEST_EQ(1, calc_std_width(u8"\uABFF"));
+        TEST_EQ(2, calc_std_width(u8"\uAC00"));
+        TEST_EQ(2, calc_std_width(u8"\uD7A3"));
+        TEST_EQ(1, calc_std_width(u8"\uD7A4"));
+
+        // [ U+F900, U+FAFF ]
+        TEST_EQ(1, calc_std_width(u8"\uF8FF"));
+        TEST_EQ(2, calc_std_width(u8"\uF900"));
+        TEST_EQ(2, calc_std_width(u8"\uFAFF"));
+        TEST_EQ(1, calc_std_width(u8"\uFB00"));
+
+        // [ U+FE10, U+FE19 ]
+        TEST_EQ(1, calc_std_width(u8"\uFE0F"));
+        TEST_EQ(2, calc_std_width(u8"\uFE10"));
+        TEST_EQ(2, calc_std_width(u8"\uFE19"));
+        TEST_EQ(1, calc_std_width(u8"\uFE1A"));
+
+        // [ U+FE30, U+FE6F ]
+        TEST_EQ(1, calc_std_width(u8"\uFE2F"));
+        TEST_EQ(2, calc_std_width(u8"\uFE30"));
+        TEST_EQ(2, calc_std_width(u8"\uFE6F"));
+        TEST_EQ(1, calc_std_width(u8"\uFE70"));
+
+        // [ U+FF00, U+FF60 ]
+        TEST_EQ(1, calc_std_width(u8"\uFEFF"));
+        TEST_EQ(2, calc_std_width(u8"\uFF00"));
+        TEST_EQ(2, calc_std_width(u8"\uFF60"));
+        TEST_EQ(1, calc_std_width(u8"\uFF61"));
+
+        // [ U+FFE0, U+FFE6 ]
+        TEST_EQ(1, calc_std_width(u8"\uFFCF"));
+        TEST_EQ(2, calc_std_width(u8"\uFFE0"));
+        TEST_EQ(2, calc_std_width(u8"\uFFE6"));
+        TEST_EQ(1, calc_std_width(u8"\uFFE7"));
+
+        // [ U+1F300, U+1F64F ]
+        TEST_EQ(1, calc_std_width(u8"\U0001F2FF"));
+        TEST_EQ(2, calc_std_width(u8"\U0001F300"));
+        TEST_EQ(2, calc_std_width(u8"\U0001F64F"));
+        TEST_EQ(1, calc_std_width(u8"\U000AF650"));
+
+        // [ U+1F900, U+1F9FF ]
+        TEST_EQ(1, calc_std_width(u8"\U0001F8FF"));
+        TEST_EQ(2, calc_std_width(u8"\U0001F900"));
+        TEST_EQ(2, calc_std_width(u8"\U0001F9FF"));
+        TEST_EQ(1, calc_std_width(u8"\U0001FA00"));
+
+        // [ U+20000, U+2FFFD ]
+        TEST_EQ(1, calc_std_width(u8"\U0001FFFF"));
+        TEST_EQ(2, calc_std_width(u8"\U00020000"));
+        TEST_EQ(2, calc_std_width(u8"\U0002FFFD"));
+        TEST_EQ(1, calc_std_width(u8"\U0002FFFE"));
+
+        // [ U+30000, U+3FFFD ]
+        TEST_EQ(1, calc_std_width(u8"\U0002FFFF"));
+        TEST_EQ(2, calc_std_width(u8"\U00030000"));
+        TEST_EQ(2, calc_std_width(u8"\U0003FFFD"));
+        TEST_EQ(1, calc_std_width(u8"\U0003FFFE"));
     }
 }

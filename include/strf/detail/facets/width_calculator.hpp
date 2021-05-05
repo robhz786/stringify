@@ -269,13 +269,60 @@ private:
     CharWidthFunc func_;
 };
 
-
 template <typename CharWidthFunc>
 width_by_func<CharWidthFunc> STRF_HD make_width_calculator(CharWidthFunc f)
 {
     return width_by_func<CharWidthFunc>{f};
 }
 
+namespace detail {
+
+STRF_HD inline strf::width_t std_width_func(char32_t ch)
+{
+    using namespace strf::width_literal;
+
+    if (ch <  0x1100) return 1_w;
+    if (ch <= 0x115F) return 2_w;
+    if (ch <  0x2329) return 1_w;
+    if (ch <= 0x232A) return 2_w;
+    if (ch <  0x2E80) return 1_w;
+    if (ch <= 0x303E) return 2_w;
+    if (ch <  0x3040) return 1_w;
+    if (ch <= 0xA4CF) return 2_w;
+    if (ch <  0xAC00) return 1_w;
+    if (ch <= 0xD7A3) return 2_w;
+    if (ch <  0xF900) return 1_w;
+    if (ch <= 0xFAFF) return 2_w;
+    if (ch <  0xFE10) return 1_w;
+    if (ch <= 0xFE19) return 2_w;
+    if (ch <  0xFE30) return 1_w;
+    if (ch <= 0xFE6F) return 2_w;
+    if (ch <  0xFF00) return 1_w;
+    if (ch <= 0xFF60) return 2_w;
+    if (ch <  0xFFE0) return 1_w;
+    if (ch <= 0xFFE6) return 2_w;
+    if (ch <  0x1F300) return 1_w;
+    if (ch <= 0x1F64F) return 2_w;
+    if (ch <  0x1F900) return 1_w;
+    if (ch <= 0x1F9FF) return 2_w;
+    if (ch <  0x20000) return 1_w;
+    if (ch <= 0x2FFFD) return 2_w;
+    if (ch <  0x30000) return 1_w;
+    if (ch <= 0x3FFFD) return 2_w;
+    return 1_w;
+}
+
+} // namespace detail
+
+class std_width final: public width_by_func<width_t(*)(char32_t)> {
+public:
+    using category = width_calculator_c;
+
+    STRF_HD std_width()
+        : width_by_func<width_t(*)(char32_t)>(strf::detail::std_width_func)
+    {
+    }
+};
 
 struct width_calculator_c
 {
@@ -286,6 +333,7 @@ struct width_calculator_c
         return {};
     }
 };
+
 
 #if defined(STRF_SEPARATE_COMPILATION)
 
